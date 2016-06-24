@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl">
+  <title data-ice="title">API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/jexia-inc/jexia-sdk-js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Auth.js~Auth.html">Auth</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Bus.js~Bus.html">Bus</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Dataset.js~Dataset.html">Dataset</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/JexiaClient.js~JexiaClient.html">JexiaClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/RealtimeClient.js~RealtimeClient.html">RealtimeClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-bus">bus</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="jexia-sdk-js-build-status-https-travis-ci-org-jexia-inc-jexia-sdk-js-svg-branch-master-https-travis-ci-org-jexia-inc-jexia-sdk-js-coverage-status-https-coveralls-io-repos-jexia-inc-jexia-sdk-js-badge-svg-branch-master-service-github-https-coveralls-io-github-jexia-inc-jexia-sdk-js-branch-master-">jexia-sdk-js <a href="https://travis-ci.org/jexia-inc/jexia-sdk-js"><img src="https://travis-ci.org/jexia-inc/jexia-sdk-js.svg?branch=master" alt="Build Status"></a> <a href="https://coveralls.io/github/jexia-inc/jexia-sdk-js?branch=master"><img src="https://coveralls.io/repos/jexia-inc/jexia-sdk-js/badge.svg?branch=master&amp;service=github" alt="Coverage Status"></a></h1>
+<p>Official javascript sdk for Jexia</p>
+<blockquote>
+<p>Currently this SDK is under active development and it&apos;s not production ready</p>
+</blockquote>
+<h2 id="installation">Installation</h2>
+<p>Through npm:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">$ npm install jexia-sdk-js</code>
+</code></pre>
+<p>Through bower:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">$ bower install jexia-sdk-js</code>
+</code></pre>
+<h2 id="usage">Usage</h2>
+<p>You can use jexia-sdk on nodejs and also on browser with the same API.
+The only different thing is how you require the jexia-sdk-js.</p>
+<h2 id="node">node</h2>
+<pre><code class="lang-js"><code class="source-code prettyprint">var JexiaClient = require(&apos;jexia-sdk-js&apos;).JexiaClient;
+
+var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+
+    // you can start interacting with your app
+
+});</code>
+</code></pre>
+<h2 id="browser">browser</h2>
+<pre><code class="lang-html"><code class="source-code prettyprint">&lt;script src=&quot;node_modules/jexia-sdk-js/lib/browser/index.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+// IMPORTANT
+var JexiaClient = window.jexiaClientBrowser.JexiaClient;
+
+var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then( function(app) {
+
+});
+&lt;/script&gt;</code>
+</code></pre>
+<h1 id="examples">Examples</h1>
+<h2 id="interacting-with-data-sets">Interacting with data sets</h2>
+<p>Let&apos;s say that our data app has a data set <code>messages</code>
+and a field <code>value</code> which contains the actual text</p>
+<h3 id="creating-a-message-">Creating a message:</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">
+var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    messages.create({
+        value: &apos;Build RESTful APIs without writing a single line of code&apos;
+    })
+    .then(function(message) {
+        // Message created successfully  
+        console.log(message);
+
+    });
+});</code>
+</code></pre>
+<h3 id="deleting-a-message-">Deleting a message:</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    messages.delete(&apos;56675c4807ad0914ccb8fc8d&apos;)
+    .then(function(message) {
+        // Message deleted successfully  
+        console.log(message);
+
+    });
+});</code>
+</code></pre>
+<h3 id="updating-a-message-">Updating a message:</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    messages.update(&apos;56675c4807ad0914ccb8fc8d&apos;, {
+        value: &apos;Use JEXIA as a Backend and focus on your awesome application&apos;
+    })
+    .then(function(message) {
+        // Message updated successfully  
+        console.log(message);
+
+    });
+});</code>
+</code></pre>
+<h3 id="getting-a-message-">Getting a message:</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    messages.get(&apos;56675c4807ad0914ccb8fc8d&apos;)
+    .then(function(message) {
+        // Here is the message
+        console.log(message);
+
+    });
+});</code>
+</code></pre>
+<h2 id="realtime-interaction-with-dataset">Realtime interaction with dataset</h2>
+<p>Let&apos;s use our previous example which our data app has a data set <code>messages</code> and a field <code>value</code> but now we want to interact in realtime.</p>
+<p>There are 4 type of events that you can subscribe:</p>
+<table>
+<thead>
+<tr>
+<th>Event name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>All events</td>
+</tr>
+<tr>
+<td>created</td>
+<td>Only created</td>
+</tr>
+<tr>
+<td>updated</td>
+<td>Only updated</td>
+</tr>
+<tr>
+<td>deleted</td>
+<td>Only deleted</td>
+</tr>
+</tbody>
+</table>
+<h3 id="subscribe-to-all-messages">Subscribe to all messages</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    messages.subscribe(&apos;*&apos;, function(message) {
+        // Realtime!
+        console.log(message);
+    });
+});</code>
+</code></pre>
+<h3 id="subscribe-only-to-created-messages">Subscribe only to created messages</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">var JexiaClient = require(&apos;jexia-sdk-js&apos;).JexiaClient;
+
+var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    // Only created messages
+    messages.subscribe(&apos;created&apos;, function(message) {
+        console.log(message);
+    });
+});</code>
+</code></pre>
+<h3 id="subscribe-only-to-updated-messages">Subscribe only to updated messages</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    // Only updated messages
+    messages.subscribe(&apos;updated&apos;, function(message) {
+        console.log(message);
+    });
+});</code>
+</code></pre>
+<h3 id="subscribe-only-to-deleted-messages">Subscribe only to deleted messages</h3>
+<pre><code class="lang-js"><code class="source-code prettyprint">var client = new JexiaClient({
+    appId: &apos;YOUR_APP_ID&apos;,
+    appKey: &apos;YOUR_APP_KEY&apos;,
+    appSecret: &apos;YOUR_APP_SECRET&apos;
+}).then(function(app) {
+    var messages = app.dataset(&apos;messages&apos;);
+
+    // Only deleted messages
+    messages.subscribe(&apos;deleted&apos;, function(message) {
+        console.log(message);
+    });
+});</code>
+</code></pre>
+<h2 id="build">Build</h2>
+<pre><code><code class="source-code prettyprint">npm run build</code>
+</code></pre><h2 id="test">Test</h2>
+<pre><code><code class="source-code prettyprint">npm run test</code>
+</code></pre><h2 id="release-history">Release History</h2>
+<ul>
+<li>1.1.0 removed count() add info(), proper json response</li>
+<li>1.0.12 query(), count() on dataset</li>
+<li>1.0.11 Browser example</li>
+<li>1.0.10 Browser build</li>
+<li>1.0.9  Fixed bud on subscriptions</li>
+<li>1.0.8  Npm version</li>
+<li>1.0.7  Fixed typos</li>
+<li>1.0.6  Npm version</li>
+<li>1.0.6  Fixed typos</li>
+<li>1.0.5  Npm version</li>
+<li>1.0.4  Changed default refresh session interval</li>
+<li>1.0.3  Npm version</li>
+<li>1.0.2  Readme example fixes</li>
+<li>1.0.1  Readme example fixes</li>
+<li>1.0.0  Initial release</li>
+</ul>
+<h2 id="issues">Issues</h2>
+<p>Feel free to submit issues and enhancement requests.</p>
+<h2 id="contributing">Contributing</h2>
+<p> In general, we follow the &quot;fork-and-pull&quot; Git workflow.</p>
+<ol>
+<li>Fork the repo on GitHub</li>
+<li>Commit changes to a branch in your fork</li>
+<li>Pull request &quot;upstream&quot; with your changes</li>
+<li>Merge changes in to &quot;upstream&quot; repo</li>
+</ol>
+<p>NOTE: Be sure to merge the latest from &quot;upstream&quot; before making a pull request!</p>
+<h2 id="license">License</h2>
+<p>The MIT License (MIT)</p>
+<p>Copyright (c) 2015 Jexia</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+</div>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

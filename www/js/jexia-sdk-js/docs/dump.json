@@ -1,0 +1,2415 @@
+[
+  {
+    "__docId__": 0,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/Auth.js",
+    "memberof": null,
+    "longname": "src/Auth.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import request from 'request';\nimport Promise from 'bluebird';\n\n/**\n * Managing the session between jexia-sdk-js and Jexia.\n */\nexport default class Auth {\n\n    /**\n     * Create a new Auth object with some initial values.\n     * @param {Object} options - Initial options object\n     * @param {string} options.url - Authentication app url\n     * @param {string} options.key - Authentication app key\n     * @param {string} options.secret - Authentication app secret\n     * @param {Object} options.client - {@link JexiaClient}\n     */\n    constructor(options) {\n        if( !options ) {\n            throw new Error('Auth needs some params');\n        }\n\n        /** @type {string} */\n        this.url = options.url;\n\n        /** @type {string} */\n        this.key = options.key;\n\n        /** @type {string} */\n        this.secret = options.secret;\n\n        /** @type {Object} */\n        this.client = options.client;\n\n        /** @type {Object} */\n        this.bus = options.client.bus;\n\n        /** @type {string} */\n        this.token = '';\n\n        /** @type {string} */\n        this.refreshToken = '';\n\n        // 1 hour and 50 minutes; JEXIA token expires in 2 hours\n        this.autoRefresh(1000 * 60 * 110);\n    }\n\n    /**\n     * Initialize a new session between jexia-sdk-js and Jexia\n     * @return {Promise<Auth, Error>}\n     */\n    init() {\n        return new Promise((resolve, reject) => {\n            request({\n                url: this.url,\n                qs: {},\n                rejectUnauthorized: false,\n                method: 'POST',\n                json: {\n                    key: this.key,\n                    secret: this.secret\n                }\n            }, (error, response, body) => {\n                if(error) {\n                    reject(error);\n                } else {\n                    if(body && body.message) {\n                        reject(body.message);\n                    }\n                    this.setToken(body.token);\n                    this.setRefreshToken(body.refresh_token);\n\n                    resolve(this);\n                }\n            });\n        });\n    }\n\n    /**\n     * Get current token\n     * @return {string} Current token\n     */\n    getToken() {\n        return this.token;\n    }\n\n    /**\n     * Get current refresh token\n     * @return {string} Current refresh token\n     */\n    getRefreshToken() {\n        return this.refreshToken;\n    }\n\n    /**\n     * Set current token\n     * @param {string} token - the new token\n     */\n    setToken(token) {\n        this.token = token;\n    }\n\n    /**\n     * Set current refresh token\n     * @param {string} refreshToken - the new token\n     */\n    setRefreshToken(refreshToken) {\n        this.refreshToken = refreshToken;\n    }\n\n    /**\n     * Refresh the session after a given time delay\n     * @param {number} delay - delay in milliseconds\n     * @emits {jexia.auth.token} emit an authentication event when we successfully refreshed the session with Jexia\n     */\n    autoRefresh(delay) {\n        setInterval( () => {\n            request({\n                url: this.url,\n                qs: {},\n                rejectUnauthorized: false,\n                method: 'PATCH',\n                json: {\n                    refresh_token: this.refreshToken\n                },\n                headers: {\n                    'Authorization': 'Bearer ' + this.token\n                }\n            }, (error, response, body) => {\n                if(error) {\n                    throw new Error(error);\n                }\n                // Set new tokens\n                this.setToken(body.token);\n                this.setRefreshToken(body.refresh_token);\n\n                // Inform the bus that we have a new token\n                this.bus.emit('jexia.auth.token', {\n                    token: this.getToken(),\n                    refreshToken: this.getRefreshToken()\n                });\n            });\n        }, delay);\n    }\n}\n"
+  },
+  {
+    "__docId__": 1,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Auth",
+    "memberof": "src/Auth.js",
+    "longname": "src/Auth.js~Auth",
+    "access": null,
+    "export": true,
+    "importPath": "jexia-sdk-js/src/Auth.js",
+    "importStyle": "Auth",
+    "description": "Managing the session between jexia-sdk-js and Jexia.",
+    "lineNumber": 7,
+    "interface": false
+  },
+  {
+    "__docId__": 2,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#constructor",
+    "access": null,
+    "description": "Create a new Auth object with some initial values.",
+    "lineNumber": 17,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "Initial options object"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.url",
+        "description": "Authentication app url"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.key",
+        "description": "Authentication app key"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.secret",
+        "description": "Authentication app secret"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.client",
+        "description": "{@link JexiaClient}"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 3,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "url",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#url",
+    "access": null,
+    "description": null,
+    "lineNumber": 23,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 4,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "key",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#key",
+    "access": null,
+    "description": null,
+    "lineNumber": 26,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 5,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "secret",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#secret",
+    "access": null,
+    "description": null,
+    "lineNumber": 29,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 6,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "client",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#client",
+    "access": null,
+    "description": null,
+    "lineNumber": 32,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 7,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "bus",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#bus",
+    "access": null,
+    "description": null,
+    "lineNumber": 35,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 8,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "token",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#token",
+    "access": null,
+    "description": null,
+    "lineNumber": 38,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 9,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "refreshToken",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#refreshToken",
+    "access": null,
+    "description": null,
+    "lineNumber": 41,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 10,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "init",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#init",
+    "access": null,
+    "description": "Initialize a new session between jexia-sdk-js and Jexia",
+    "lineNumber": 51,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Auth, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 11,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getToken",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#getToken",
+    "access": null,
+    "description": "Get current token",
+    "lineNumber": 82,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": "Current token"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 12,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getRefreshToken",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#getRefreshToken",
+    "access": null,
+    "description": "Get current refresh token",
+    "lineNumber": 90,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": "Current refresh token"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 13,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "setToken",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#setToken",
+    "access": null,
+    "description": "Set current token",
+    "lineNumber": 98,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "token",
+        "description": "the new token"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 14,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "token",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#token",
+    "access": null,
+    "description": null,
+    "lineNumber": 99,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 15,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "setRefreshToken",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#setRefreshToken",
+    "access": null,
+    "description": "Set current refresh token",
+    "lineNumber": 106,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "refreshToken",
+        "description": "the new token"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 16,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "refreshToken",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#refreshToken",
+    "access": null,
+    "description": null,
+    "lineNumber": 107,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 17,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "autoRefresh",
+    "memberof": "src/Auth.js~Auth",
+    "longname": "src/Auth.js~Auth#autoRefresh",
+    "access": null,
+    "description": "Refresh the session after a given time delay",
+    "lineNumber": 115,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "delay",
+        "description": "delay in milliseconds"
+      }
+    ],
+    "emits": [
+      {
+        "types": [
+          "jexia.auth.token"
+        ],
+        "description": "emit an authentication event when we successfully refreshed the session with Jexia"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 18,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/Bus.js",
+    "memberof": null,
+    "longname": "src/Bus.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import EventEmitter from 'events';\n\n/**\n * Global singleton event bus for dataset subscriptions.\n * @extends {EventEmitter}\n */\n class Bus extends EventEmitter {\n     /**\n      * Call EventEmitter constructor\n      */\n     constructor() {\n         super();\n     }\n}\n\n/**\n * @typedef {Object} {@link Bus}\n */\nlet bus = new Bus();\nexport default bus;\n"
+  },
+  {
+    "__docId__": 19,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Bus",
+    "memberof": "src/Bus.js",
+    "longname": "src/Bus.js~Bus",
+    "access": null,
+    "export": true,
+    "importPath": "jexia-sdk-js/src/Bus.js",
+    "importStyle": null,
+    "description": "Global singleton event bus for dataset subscriptions.",
+    "lineNumber": 7,
+    "pseudoExport": true,
+    "interface": false,
+    "extends": [
+      "EventEmitter"
+    ]
+  },
+  {
+    "__docId__": 20,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/Bus.js~Bus",
+    "longname": "src/Bus.js~Bus#constructor",
+    "access": null,
+    "description": "Call EventEmitter constructor",
+    "lineNumber": 11,
+    "params": [],
+    "generator": false
+  },
+  {
+    "__docId__": 21,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "bus",
+    "memberof": "src/Bus.js",
+    "longname": "src/Bus.js~bus",
+    "access": null,
+    "export": true,
+    "importPath": "jexia-sdk-js/src/Bus.js",
+    "importStyle": "bus",
+    "description": null,
+    "lineNumber": 20,
+    "undocument": true,
+    "type": {
+      "types": [
+        "src/Bus.js~Bus"
+      ]
+    }
+  },
+  {
+    "__docId__": 22,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/Dataset.js",
+    "memberof": null,
+    "longname": "src/Dataset.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import request from 'request';\nimport faye from 'faye';\nimport Promise from 'bluebird';\n\n/**\n * Dataset CRUD operations and realtime subscriptions\n */\nexport default class Dataset {\n\n    /**\n     * Create a dataset object with some initial values.\n     * @param {string} name - Name of the dataset\n     * @param {Object} client - {@link JexiaClient}\n     */\n    constructor(name, client) {\n        if( !name || !client ) throw new Error('Dataset needs some params');\n\n        /** @type {string} */\n        this.name = name;\n\n        /** @type {Object} */\n        this.auth = client.auth;\n\n        /** @type {Object} */\n        this.app = client.app;\n\n        /** @type {Object} */\n        this.rtc = client.rtc;\n\n        /** @type {Object} */\n        this.bus = client.bus;\n    }\n\n    /**\n     * List all records\n     * @return {Promise<Array, Error>}\n     * @example\n     * dataset.list().then(function(res) {\n     *    console.log(res);\n     * });\n     */\n    list() {\n        return this.request({\n            method: 'GET',\n            data: '',\n            id: ''\n        });\n    }\n\n    /**\n     * Query a dataset with query parameters\n     * @param {Object} params - query params\n     * @return {Promise<Array, Error>}\n     * @example\n     * dataset.query({limit: 1}).then(function(res) {\n     *    console.log(res);\n     * });\n     */\n    query(params) {\n        return this.request({\n            method: 'GET',\n            data: '',\n            id: '',\n            qs: params\n        });\n    }\n\n    /**\n     * Get information about the dataset, such as total records\n     * @return {Promise<Object, Error>}\n     * @example\n     * dataset.info().then(function(res) {\n     *    console.log(res);\n     * });\n     */\n    info() {\n        return new Promise((resolve, reject) => {\n            this.request({\n                method: 'GET',\n                data: '',\n                id: '',\n                qs: {\n                    jexia_info: true\n                }\n            }).then( (body) => {\n                resolve(body.info);\n            }, (error) => {\n                reject(error);\n            });\n        });\n    }\n\n    /**\n     * Create a new record on the dataset\n     * @param {Object} data - Row data\n     * @return {Promise<Object, Error>}\n     * @example\n     * dataset.create({value: test}).then(function(res) {\n     *    console.log(res);\n     * });\n     */\n    create(data) {\n        return this.request({\n            method: 'POST',\n            data: data,\n            id: ''\n        });\n    }\n\n    /**\n     * Update a record on the dataset\n     * @param {string} id - record id\n     * @param {Object} data - Data to update\n     * @return {Promise<Object, Error>}\n     * @example\n     * dataset.update('s6svsrw452rwfs', {value: test}).then(function(res) {\n     *    console.log(res);\n     * });\n     */\n    update(id, data) {\n        return this.request({\n            method: 'PUT',\n            data: data,\n            id: id\n        });\n    }\n\n    /**\n     * Delete a record from the dataset\n     * @param {string} id - record id\n     * @return {Promise<Object, Error>}\n     * @example\n     * dataset.delete('s6svsrw452rwfs').then(function(res) {\n     *    console.log(res);\n     * });\n     */\n    delete(id) {\n        return this.request({\n            method: 'DELETE',\n            data: '',\n            id: id\n        });\n    }\n\n    /**\n     * Get dataset url\n     * @private\n     * @return {string} url\n     */\n    getUrl() {\n        return this.auth.url + this.name + '/';\n    }\n\n    /**\n     * Get dataset namespace\n     * @private\n     * @return {string} url\n     */\n    getEventNamespace(event) {\n        return this.name + '.' + event;\n    }\n\n    /**\n     * Http request\n     * @private\n     * @return {Promise<Request, Error>}\n     */\n    request(params) {\n        if( !params) throw new Error('Not enought params for request');\n\n        let method = params.method,\n            data = params.data,\n            id = params.id,\n            qs = {};\n\n        // Query params\n        if( typeof params.qs !== 'undefined' ) {\n            qs = params.qs;\n        }\n\n        return new Promise((resolve, reject) => {\n            request({\n                url: this.getUrl() + id,\n                qs: qs,\n                rejectUnauthorized: false,\n                method: method,\n                json: data || true,\n                headers: {\n                    'Authorization': 'Bearer ' + this.auth.getToken()\n                }\n            }, (error, response, body) => {\n                if( error ) {\n                    reject(error);\n                }\n\n                if(body && body.message) {\n                    reject(body.message);\n                }\n\n                resolve(body);\n            });\n        });\n    }\n\n    /**\n     * Subscribe to realtime notfications\n     * The event name can be:\n     * 1. None => Any kind of activity\n     * 2. '*' => Any kind of activity\n     * 3. 'created' => Only created rows\n     * 4. 'updated' => Only updated rows\n     * 5. 'deleted' => Only deleted rows\n     * @param {...args} args - Event name and callback function\n     * @emits {jexia.dataset.subscription} emit a new subscription event\n     * @returns {Object} Dataset\n     * @example\n     * Subscribe to all events:\n     * dataset.subscribe(function(data) {\n     *     console.log(data);\n     * });\n     *\n     * Subscribe to created events:\n     * dataset.subscribe('created', function(data) {\n     *     console.log(data);\n     * });\n     *\n     * Subscribe to updated events:\n     * dataset.subscribe('updated', function(data) {\n     *     console.log(data);\n     * });\n     *\n     * Subscribe to deleted events:\n     * dataset.subscribe('deleted', function(data) {\n     *     console.log(data);\n     * });\n     */\n    subscribe(...args) {\n        let event = '',\n            cb = function callback() {};\n\n        // Listen all events\n        if(args.length === 1) {\n            event = '*';\n            cb = args[0];\n        } else if(args.length === 2) {\n            event = args[0];\n            cb = args[1];\n        } else {\n            throw new Error('Not enough parameters for subscription');\n        }\n\n        // Attach the callback\n        this.bus.on(this.getEventNamespace(event), cb);\n\n        // Emit new subscription\n        this.bus.emit('jexia.dataset.subscription', {\n            app: this.app,\n            dataset: this.name,\n            event: this.getEventNamespace(event)\n        });\n\n        // Chainning\n        return this;\n    }\n    /**\n     * Unsubscribe from realtime notfications\n     * @param {...args} args - Event name and callback function\n     * @example\n     * dataset.unsubscribe(function(data) {\n     *     console.log(data);\n     * });\n     */\n    unsubscribe(...args) {\n        let event = '',\n            cb = function callback() {};\n\n        if(args.length === 1) {\n            event = '*';\n            cb = args[0];\n        } else if(args.length === 2) {\n            event = args[0];\n            cb = args[1];\n        } else {\n            throw new Error('Not enough parameters to unsubscribe');\n        }\n\n        this.bus.removeListener(this.getEventNamespace(event), cb);\n    }\n}\n"
+  },
+  {
+    "__docId__": 23,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Dataset",
+    "memberof": "src/Dataset.js",
+    "longname": "src/Dataset.js~Dataset",
+    "access": null,
+    "export": true,
+    "importPath": "jexia-sdk-js/src/Dataset.js",
+    "importStyle": "Dataset",
+    "description": "Dataset CRUD operations and realtime subscriptions",
+    "lineNumber": 8,
+    "interface": false
+  },
+  {
+    "__docId__": 24,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#constructor",
+    "access": null,
+    "description": "Create a dataset object with some initial values.",
+    "lineNumber": 15,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "name",
+        "description": "Name of the dataset"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "client",
+        "description": "{@link JexiaClient}"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 25,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "name",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#name",
+    "access": null,
+    "description": null,
+    "lineNumber": 19,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 26,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "auth",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#auth",
+    "access": null,
+    "description": null,
+    "lineNumber": 22,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 27,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "app",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#app",
+    "access": null,
+    "description": null,
+    "lineNumber": 25,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 28,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "rtc",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#rtc",
+    "access": null,
+    "description": null,
+    "lineNumber": 28,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 29,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "bus",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#bus",
+    "access": null,
+    "description": null,
+    "lineNumber": 31,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 30,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "list",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#list",
+    "access": null,
+    "description": "List all records",
+    "examples": [
+      "dataset.list().then(function(res) {\n   console.log(res);\n});"
+    ],
+    "lineNumber": 42,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Array, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 31,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "query",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#query",
+    "access": null,
+    "description": "Query a dataset with query parameters",
+    "examples": [
+      "dataset.query({limit: 1}).then(function(res) {\n   console.log(res);\n});"
+    ],
+    "lineNumber": 59,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "params",
+        "description": "query params"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Array, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 32,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "info",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#info",
+    "access": null,
+    "description": "Get information about the dataset, such as total records",
+    "examples": [
+      "dataset.info().then(function(res) {\n   console.log(res);\n});"
+    ],
+    "lineNumber": 76,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 33,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "create",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#create",
+    "access": null,
+    "description": "Create a new record on the dataset",
+    "examples": [
+      "dataset.create({value: test}).then(function(res) {\n   console.log(res);\n});"
+    ],
+    "lineNumber": 102,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "Row data"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 34,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "update",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#update",
+    "access": null,
+    "description": "Update a record on the dataset",
+    "examples": [
+      "dataset.update('s6svsrw452rwfs', {value: test}).then(function(res) {\n   console.log(res);\n});"
+    ],
+    "lineNumber": 120,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": "record id"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "Data to update"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 35,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "delete",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#delete",
+    "access": null,
+    "description": "Delete a record from the dataset",
+    "examples": [
+      "dataset.delete('s6svsrw452rwfs').then(function(res) {\n   console.log(res);\n});"
+    ],
+    "lineNumber": 137,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": "record id"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 36,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getUrl",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#getUrl",
+    "access": "private",
+    "description": "Get dataset url",
+    "lineNumber": 150,
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": "url"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 37,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getEventNamespace",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#getEventNamespace",
+    "access": "private",
+    "description": "Get dataset namespace",
+    "lineNumber": 159,
+    "params": [
+      {
+        "name": "event",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": "url"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 38,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "request",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#request",
+    "access": "private",
+    "description": "Http request",
+    "lineNumber": 168,
+    "params": [
+      {
+        "name": "params",
+        "types": [
+          "*"
+        ]
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Request, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 39,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "subscribe",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#subscribe",
+    "access": null,
+    "description": "Subscribe to realtime notfications\nThe event name can be:\n1. None => Any kind of activity\n2. '*' => Any kind of activity\n3. 'created' => Only created rows\n4. 'updated' => Only updated rows\n5. 'deleted' => Only deleted rows",
+    "examples": [
+      "Subscribe to all events:\ndataset.subscribe(function(data) {\n    console.log(data);\n});\n\nSubscribe to created events:\ndataset.subscribe('created', function(data) {\n    console.log(data);\n});\n\nSubscribe to updated events:\ndataset.subscribe('updated', function(data) {\n    console.log(data);\n});\n\nSubscribe to deleted events:\ndataset.subscribe('deleted', function(data) {\n    console.log(data);\n});"
+    ],
+    "lineNumber": 237,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Object} Dataset"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "...args"
+        ],
+        "spread": true,
+        "optional": false,
+        "name": "args",
+        "description": "Event name and callback function"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": "Dataset"
+    },
+    "emits": [
+      {
+        "types": [
+          "jexia.dataset.subscription"
+        ],
+        "description": "emit a new subscription event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 40,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "unsubscribe",
+    "memberof": "src/Dataset.js~Dataset",
+    "longname": "src/Dataset.js~Dataset#unsubscribe",
+    "access": null,
+    "description": "Unsubscribe from realtime notfications",
+    "examples": [
+      "dataset.unsubscribe(function(data) {\n    console.log(data);\n});"
+    ],
+    "lineNumber": 273,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "...args"
+        ],
+        "spread": true,
+        "optional": false,
+        "name": "args",
+        "description": "Event name and callback function"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 41,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/JexiaClient.js",
+    "memberof": null,
+    "longname": "src/JexiaClient.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import Promise from 'bluebird';\nimport Auth from './Auth.js';\nimport Dataset from './Dataset.js';\nimport RealtimeClient from './RealtimeClient.js';\nimport Bus from './Bus.js';\n\n/**\n * Bootstraping jexia-sdk-js with a new session\n */\nexport default class JexiaClient {\n\n    /**\n     * Create a new JexiaClient object with some initial values.\n     * @param {Object} options - Initial options object\n     * @param {string} options.appId - App id\n     * @param {string} options.appKey - App key\n     * @param {string} options.appSecret - App secret\n     * @return {Promise<JexiaClient, Error>}\n     */\n    constructor(options) {\n        if(!options) throw new Error('Error constructing JexiaClient: Not enought params');\n\n        /** @type {string} */\n        this.appId = options.appId;\n\n        /** @type {string} */\n        this.appKey = options.appKey;\n\n        /** @type {string} */\n        this.appSecret = options.appSecret;\n\n        if (!this.appId || !this.appKey || !this.appSecret) {\n            throw new Error('Please provide your jexia app id, app key and app secret');\n        }\n\n        // We ask JEXIA for a token and then we initialize evetything\n        return new Promise( (resolve,reject) => {\n            // Assign event bus\n            /** @type {Object} */\n            this.bus = Bus;\n\n            // Assign auth\n            /** @type {Object} */\n            this.auth = new Auth({\n                url: 'http://' + this.appId + '.app.jexia.com/',\n                key: this.appKey,\n                secret: this.appSecret,\n                client: this\n            });\n\n            // Get the token and proceed\n            this.auth.init().then( auth => {\n\n                // Assign app info\n                /** @type {Object} */\n                this.app = {\n                    id: this.appId,\n                    key: this.appKey,\n                    secret: this.appSecret\n                };\n\n                // Assign realtime client\n                /** @type {Object} */\n                this.rtc = new RealtimeClient({\n                    url: 'http://rtc.jexia.com/rtc',\n                    token: auth.token,\n                    bus: this.bus\n                });\n\n                // Assign dataset\n                /** @type {Object} */\n                this.dataset = (name) => {\n                    return new Dataset(name, this);\n                }\n\n                // Everything ok\n                resolve(this);\n            },\n            (error) => {\n                throw new Error(error);\n            });\n        });\n    }\n}\n"
+  },
+  {
+    "__docId__": 42,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "JexiaClient",
+    "memberof": "src/JexiaClient.js",
+    "longname": "src/JexiaClient.js~JexiaClient",
+    "access": null,
+    "export": true,
+    "importPath": "jexia-sdk-js/src/JexiaClient.js",
+    "importStyle": "JexiaClient",
+    "description": "Bootstraping jexia-sdk-js with a new session",
+    "lineNumber": 10,
+    "interface": false
+  },
+  {
+    "__docId__": 43,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#constructor",
+    "access": null,
+    "description": "Create a new JexiaClient object with some initial values.",
+    "lineNumber": 20,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "Initial options object"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.appId",
+        "description": "App id"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.appKey",
+        "description": "App key"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.appSecret",
+        "description": "App secret"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<JexiaClient, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 44,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "appId",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#appId",
+    "access": null,
+    "description": null,
+    "lineNumber": 24,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 45,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "appKey",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#appKey",
+    "access": null,
+    "description": null,
+    "lineNumber": 27,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 46,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "appSecret",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#appSecret",
+    "access": null,
+    "description": null,
+    "lineNumber": 30,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 47,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "bus",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#bus",
+    "access": null,
+    "description": null,
+    "lineNumber": 40,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 48,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "auth",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#auth",
+    "access": null,
+    "description": null,
+    "lineNumber": 44,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 49,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "app",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#app",
+    "access": null,
+    "description": null,
+    "lineNumber": 56,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 50,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "rtc",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#rtc",
+    "access": null,
+    "description": null,
+    "lineNumber": 64,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 51,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "dataset",
+    "memberof": "src/JexiaClient.js~JexiaClient",
+    "longname": "src/JexiaClient.js~JexiaClient#dataset",
+    "access": null,
+    "description": null,
+    "lineNumber": 72,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 52,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/RealtimeClient.js",
+    "memberof": null,
+    "longname": "src/RealtimeClient.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import faye from 'faye';\n\n/**\n * Managing real time events\n */\nexport default class RealtimeClient {\n\n    /**\n     * Create a new RealTimeClient object with some initial values.\n     * @param {Object} options - Initial options object\n     * @param {string} options.url - url\n     * @param {string} options.token - token\n     * @param {string} options.bus - {@link Bus}\n     * @return {Promise<JexiaClient, Error>}\n     */\n    constructor(options) {\n        if( !options ) {\n            throw new Error('RealtimeClient needs some params');\n        }\n\n        /** @type {string} */\n        this.url = options.url;\n\n        /** @type {string} */\n        this.token = options.token;\n\n        /** @type {Object} */\n        this.bus = options.bus;\n\n        // Active subscriptions\n        /** @type {Array} */\n        this.subscriptions = [];\n\n        // Current subsription\n        /** @type {string} */\n        this.curSubscription = '';\n\n        // Initialize real time client\n        /** @type {Object} */\n        this.faye = new faye.Client(this.url);\n\n        // Set auth token\n        this.faye.addExtension({\n            outgoing: (message, cb) => {\n                if (message.channel !== '/meta/subscribe') return cb(message);\n\n                message.ext = message.ext || {};\n                message.ext.token = this.token;\n                cb(message);\n            }\n        });\n        // Attach the handlers\n        this.attachEventHandlers();\n    }\n\n    /**\n     * Attach responsible event handlers\n     * @listens {jexia.auth.token} - New token\n     * @listens {jexia.dataset.subscription} - New dataset subsciption\n     */\n    attachEventHandlers() {\n        // Attach handler for new token\n        this.bus.on('jexia.auth.token', (data) => { this.onToken(data); });\n\n        // New subscription\n        this.bus.on('jexia.dataset.subscription', (data) => { this.onSubscription(data); });\n    }\n\n    /**\n     * Responsible for handling a new subscription\n     * @param {Object} data - Subscription response\n     */\n    onSubscription(data) {\n        let name = data.dataset,\n            event = data.event,\n            channel = '/' + data.app.id + '/' + name + '/' + data.app.key;\n\n        let subscription = this.faye.subscribe(channel, (data) => {\n            let curEvent = this.getEventWithoutNamespace(event);\n            if( data.type === curEvent || curEvent === '*' ) {\n                this.curSubscription = event;\n                this.bus.emit(event, data);\n            }\n        });\n\n        this.subscriptions.push({\n            data: {\n                app: data.app,\n                dataset: name,\n                event: event,\n                channel: channel\n            },\n            subscription: subscription\n        });\n    }\n\n    /**\n     * Responsible for handling a new token\n     * @param {Object} data - Subscription response\n     */\n    onToken(data) {\n        this.setToken(data.token);\n\n        this.curSubscription = '';\n        this.subscriptions.forEach(item => {\n\n            // Unsubscribe first\n            this.faye.unsubscribe(item.data.channel);\n\n            // Subscribe again\n            item.subscription = this.faye.subscribe(item.data.channel, (data) => {\n                let curEvent = this.getEventWithoutNamespace(item.data.event);\n\n                if( data.type === curEvent || curEvent === '*' ) {\n                    if( this.curSubscription !== item.data.event) {\n                        this.curSubscription = item.data.event;\n                        this.bus.emit(item.data.event, data);\n                    }\n                }\n            });\n        });\n    }\n\n    /**\n     * get event name without namespace\n     * @param {string} event - Event with namespace attached\n     * @return {string} event - Event without namespace\n     */\n    getEventWithoutNamespace(event) {\n        let res = event.split('.');\n        return res[1];\n    }\n\n    /**\n     * Set the current token\n     * @param {string} token - token\n     */\n    setToken(token) {\n        this.token = token;\n    }\n}\n"
+  },
+  {
+    "__docId__": 53,
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "RealtimeClient",
+    "memberof": "src/RealtimeClient.js",
+    "longname": "src/RealtimeClient.js~RealtimeClient",
+    "access": null,
+    "export": true,
+    "importPath": "jexia-sdk-js/src/RealtimeClient.js",
+    "importStyle": "RealtimeClient",
+    "description": "Managing real time events",
+    "lineNumber": 6,
+    "interface": false
+  },
+  {
+    "__docId__": 54,
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#constructor",
+    "access": null,
+    "description": "Create a new RealTimeClient object with some initial values.",
+    "lineNumber": 16,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options",
+        "description": "Initial options object"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.url",
+        "description": "url"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.token",
+        "description": "token"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "options.bus",
+        "description": "{@link Bus}"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<JexiaClient, Error>"
+      ],
+      "spread": false,
+      "description": ""
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 55,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "url",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#url",
+    "access": null,
+    "description": null,
+    "lineNumber": 22,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 56,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "token",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#token",
+    "access": null,
+    "description": null,
+    "lineNumber": 25,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 57,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "bus",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#bus",
+    "access": null,
+    "description": null,
+    "lineNumber": 28,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 58,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "subscriptions",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#subscriptions",
+    "access": null,
+    "description": null,
+    "lineNumber": 32,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Array"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 59,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "curSubscription",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#curSubscription",
+    "access": null,
+    "description": null,
+    "lineNumber": 36,
+    "type": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 60,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "faye",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#faye",
+    "access": null,
+    "description": null,
+    "lineNumber": 40,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "__docId__": 61,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "attachEventHandlers",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#attachEventHandlers",
+    "access": null,
+    "description": "Attach responsible event handlers",
+    "lineNumber": 61,
+    "params": [],
+    "listens": [
+      {
+        "types": [
+          "jexia.auth.token"
+        ],
+        "description": "New token"
+      },
+      {
+        "types": [
+          "jexia.dataset.subscription"
+        ],
+        "description": "New dataset subsciption"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 62,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "onSubscription",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#onSubscription",
+    "access": null,
+    "description": "Responsible for handling a new subscription",
+    "lineNumber": 73,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "Subscription response"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 63,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "curSubscription",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#curSubscription",
+    "access": null,
+    "description": null,
+    "lineNumber": 81,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 64,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "onToken",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#onToken",
+    "access": null,
+    "description": "Responsible for handling a new token",
+    "lineNumber": 101,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "Subscription response"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 65,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "curSubscription",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#curSubscription",
+    "access": null,
+    "description": null,
+    "lineNumber": 104,
+    "undocument": true,
+    "type": {
+      "types": [
+        "string"
+      ]
+    }
+  },
+  {
+    "__docId__": 66,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "curSubscription",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#curSubscription",
+    "access": null,
+    "description": null,
+    "lineNumber": 116,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 67,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "getEventWithoutNamespace",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#getEventWithoutNamespace",
+    "access": null,
+    "description": "get event name without namespace",
+    "lineNumber": 129,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "Event with namespace attached"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "string"
+      ],
+      "spread": false,
+      "description": "event - Event without namespace"
+    },
+    "generator": false
+  },
+  {
+    "__docId__": 68,
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "setToken",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#setToken",
+    "access": null,
+    "description": "Set the current token",
+    "lineNumber": 138,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "token",
+        "description": "token"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "__docId__": 69,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "token",
+    "memberof": "src/RealtimeClient.js~RealtimeClient",
+    "longname": "src/RealtimeClient.js~RealtimeClient#token",
+    "access": null,
+    "description": null,
+    "lineNumber": 139,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 70,
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "src/index.js",
+    "memberof": null,
+    "longname": "src/index.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "export JexiaClient from './JexiaClient.js';\n"
+  },
+  {
+    "__docId__": 72,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 73,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 74,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 75,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 76,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 77,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 78,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 79,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 80,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 81,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 82,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 83,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 84,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 85,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 86,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 87,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 88,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 89,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 90,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 91,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 92,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 93,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 94,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 95,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 96,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 97,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 98,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 99,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 100,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 101,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 102,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 103,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 104,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 105,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 106,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 107,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 108,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 109,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 110,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 111,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 112,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 113,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 114,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 115,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 116,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 117,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 118,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 120,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 121,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 122,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 123,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 124,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 125,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 126,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 127,
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "AudioContext",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/AudioContext",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~AudioContext",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  }
+]

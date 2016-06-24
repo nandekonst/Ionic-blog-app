@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/JexiaClient.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/jexia-inc/jexia-sdk-js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Auth.js~Auth.html">Auth</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Bus.js~Bus.html">Bus</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Dataset.js~Dataset.html">Dataset</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/JexiaClient.js~JexiaClient.html">JexiaClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/RealtimeClient.js~RealtimeClient.html">RealtimeClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-bus">bus</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/JexiaClient.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import Promise from &apos;bluebird&apos;;
+import Auth from &apos;./Auth.js&apos;;
+import Dataset from &apos;./Dataset.js&apos;;
+import RealtimeClient from &apos;./RealtimeClient.js&apos;;
+import Bus from &apos;./Bus.js&apos;;
+
+/**
+ * Bootstraping jexia-sdk-js with a new session
+ */
+export default class JexiaClient {
+
+    /**
+     * Create a new JexiaClient object with some initial values.
+     * @param {Object} options - Initial options object
+     * @param {string} options.appId - App id
+     * @param {string} options.appKey - App key
+     * @param {string} options.appSecret - App secret
+     * @return {Promise&lt;JexiaClient, Error&gt;}
+     */
+    constructor(options) {
+        if(!options) throw new Error(&apos;Error constructing JexiaClient: Not enought params&apos;);
+
+        /** @type {string} */
+        this.appId = options.appId;
+
+        /** @type {string} */
+        this.appKey = options.appKey;
+
+        /** @type {string} */
+        this.appSecret = options.appSecret;
+
+        if (!this.appId || !this.appKey || !this.appSecret) {
+            throw new Error(&apos;Please provide your jexia app id, app key and app secret&apos;);
+        }
+
+        // We ask JEXIA for a token and then we initialize evetything
+        return new Promise( (resolve,reject) =&gt; {
+            // Assign event bus
+            /** @type {Object} */
+            this.bus = Bus;
+
+            // Assign auth
+            /** @type {Object} */
+            this.auth = new Auth({
+                url: &apos;http://&apos; + this.appId + &apos;.app.jexia.com/&apos;,
+                key: this.appKey,
+                secret: this.appSecret,
+                client: this
+            });
+
+            // Get the token and proceed
+            this.auth.init().then( auth =&gt; {
+
+                // Assign app info
+                /** @type {Object} */
+                this.app = {
+                    id: this.appId,
+                    key: this.appKey,
+                    secret: this.appSecret
+                };
+
+                // Assign realtime client
+                /** @type {Object} */
+                this.rtc = new RealtimeClient({
+                    url: &apos;http://rtc.jexia.com/rtc&apos;,
+                    token: auth.token,
+                    bus: this.bus
+                });
+
+                // Assign dataset
+                /** @type {Object} */
+                this.dataset = (name) =&gt; {
+                    return new Dataset(name, this);
+                }
+
+                // Everything ok
+                resolve(this);
+            },
+            (error) =&gt; {
+                throw new Error(error);
+            });
+        });
+    }
+}
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

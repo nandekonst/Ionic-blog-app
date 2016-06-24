@@ -1,0 +1,29 @@
+{
+  "name": "jexia-sdk-js",
+  "version": "1.1.0",
+  "homepage": "https://github.com/jexia-inc/jexia-sdk-js",
+  "authors": [
+    "d3nnn1z <d3nnn1z@gmail.com>"
+  ],
+  "description": "Official javascript sdk for Jexia",
+  "main": "./lib/browser/index.min.js",
+  "keywords": [
+    "jexia",
+    "sdk",
+    "api",
+    "library",
+    "javascript",
+    "js",
+    "es2015"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "test",
+    "examples",
+    "coverage",
+    "docs",
+    "src"
+  ]
+}

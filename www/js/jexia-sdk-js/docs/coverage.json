@@ -1,0 +1,34 @@
+{
+  "coverage": "98.21%",
+  "expectCount": 56,
+  "actualCount": 55,
+  "files": {
+    "src/Auth.js": {
+      "expectCount": 15,
+      "actualCount": 15,
+      "undocumentLines": []
+    },
+    "src/Bus.js": {
+      "expectCount": 3,
+      "actualCount": 2,
+      "undocumentLines": [
+        20
+      ]
+    },
+    "src/Dataset.js": {
+      "expectCount": 15,
+      "actualCount": 15,
+      "undocumentLines": []
+    },
+    "src/JexiaClient.js": {
+      "expectCount": 10,
+      "actualCount": 10,
+      "undocumentLines": []
+    },
+    "src/RealtimeClient.js": {
+      "expectCount": 13,
+      "actualCount": 13,
+      "undocumentLines": []
+    }
+  }
+}

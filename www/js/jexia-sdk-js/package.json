@@ -1,0 +1,122 @@
+{
+  "_args": [
+    [
+      "jexia-sdk-js",
+      "C:\\Users\\Milan\\Desktop\\BlogFeed"
+    ]
+  ],
+  "_from": "jexia-sdk-js@latest",
+  "_id": "jexia-sdk-js@1.1.7",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/jexia-sdk-js",
+  "_nodeVersion": "0.12.4",
+  "_npmUser": {
+    "email": "d3nnn1z@gmail.com",
+    "name": "d3nnn1z"
+  },
+  "_npmVersion": "2.14.13",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "jexia-sdk-js",
+    "raw": "jexia-sdk-js",
+    "rawSpec": "",
+    "scope": null,
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/jexia-sdk-js/-/jexia-sdk-js-1.1.7.tgz",
+  "_shasum": "2a8c00502e00b06743c2ee5e68be74efe7e425d7",
+  "_shrinkwrap": null,
+  "_spec": "jexia-sdk-js",
+  "_where": "C:\\Users\\Milan\\Desktop\\BlogFeed",
+  "author": {
+    "email": "d3nnn1z@gmail.com",
+    "name": "Dionysis Pantazopoulos"
+  },
+  "browser": {
+    "bluebird": "./node_modules/bluebird/js/browser/bluebird.min.js",
+    "faye": "./node_modules/faye/browser/faye-browser-min.js",
+    "request": "./node_modules/browser-request/index.js"
+  },
+  "bugs": {
+    "url": "https://github.com/jexia-inc/jexia-sdk-js/issues"
+  },
+  "bugs:": {
+    "url": "https://github.com/jexia-inc/jexia-sdk-js/issues"
+  },
+  "dependencies": {
+    "bluebird": "^3.0.5",
+    "browser-request": "github:d3nnn1z/browser-request#qs-nested-objects",
+    "faye": "^1.1.2",
+    "request": "^2.67.0"
+  },
+  "description": "Official javascript sdk for Jexia",
+  "devDependencies": {
+    "babel-cli": "^6.3.17",
+    "babel-core": "^6.3.17",
+    "babel-eslint": "^5.0.0-beta6",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-stage-1": "^6.3.13",
+    "babel-register": "^6.3.13",
+    "bower": "^1.7.1",
+    "browserify": "^12.0.1",
+    "chai": "^3.4.1",
+    "coveralls": "^2.11.6",
+    "esdoc": "^0.4.3",
+    "esdoc-es7-plugin": "0.0.3",
+    "eslint": "^1.10.3",
+    "isparta": "^4.0.0",
+    "mocha": "^2.3.4",
+    "nock": "*",
+    "sinon": "^1.17.2",
+    "uglify-js": "^2.6.1"
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "2a8c00502e00b06743c2ee5e68be74efe7e425d7",
+    "tarball": "http://registry.npmjs.org/jexia-sdk-js/-/jexia-sdk-js-1.1.7.tgz"
+  },
+  "engines": {
+    "node": ">= v0.12.0"
+  },
+  "gitHead": "6fb2e1ed545db66fe3ba871fcf575ee778172462",
+  "homepage": "https://github.com/jexia-inc/jexia-sdk-js#readme",
+  "keywords": [
+    "jexia",
+    "sdk",
+    "api",
+    "library"
+  ],
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "maintainers": [
+    {
+      "email": "d3nnn1z@gmail.com",
+      "name": "d3nnn1z"
+    }
+  ],
+  "name": "jexia-sdk-js",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jexia-inc/jexia-sdk-js.git"
+  },
+  "scripts": {
+    "build": "npm run build:node && npm run build:browser",
+    "build:browser": "browserify lib/index.js > ./lib/browser/index.js --standalone 'jexia-client-browser' && ./node_modules/.bin/uglifyjs ./lib/browser/index.js --compress --mangle > ./lib/browser/index.min.js",
+    "build:node": "babel --presets es2015,stage-1 -d lib src",
+    "coverage": "babel-node node_modules/.bin/isparta cover --report html ./node_modules/.bin/_mocha --reporter spec test",
+    "coveralls": "babel-node node_modules/.bin/isparta cover --report lcovonly ./node_modules/.bin/_mocha --reporter lcovonly test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "docs": "esdoc -c esdoc.json",
+    "prepublish": "npm run build",
+    "tdd": "mocha --reporter spec --compilers js:babel-register test --watch",
+    "test": "mocha --reporter spec --compilers js:babel-register test",
+    "watch": "babel --presets es2015,stage-1 -d lib src --watch"
+  },
+  "version": "1.1.7"
+}

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/RealtimeClient.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/jexia-inc/jexia-sdk-js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Auth.js~Auth.html">Auth</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Bus.js~Bus.html">Bus</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Dataset.js~Dataset.html">Dataset</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/JexiaClient.js~JexiaClient.html">JexiaClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/RealtimeClient.js~RealtimeClient.html">RealtimeClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-bus">bus</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/RealtimeClient.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import faye from &apos;faye&apos;;
+
+/**
+ * Managing real time events
+ */
+export default class RealtimeClient {
+
+    /**
+     * Create a new RealTimeClient object with some initial values.
+     * @param {Object} options - Initial options object
+     * @param {string} options.url - url
+     * @param {string} options.token - token
+     * @param {string} options.bus - {@link Bus}
+     * @return {Promise&lt;JexiaClient, Error&gt;}
+     */
+    constructor(options) {
+        if( !options ) {
+            throw new Error(&apos;RealtimeClient needs some params&apos;);
+        }
+
+        /** @type {string} */
+        this.url = options.url;
+
+        /** @type {string} */
+        this.token = options.token;
+
+        /** @type {Object} */
+        this.bus = options.bus;
+
+        // Active subscriptions
+        /** @type {Array} */
+        this.subscriptions = [];
+
+        // Current subsription
+        /** @type {string} */
+        this.curSubscription = &apos;&apos;;
+
+        // Initialize real time client
+        /** @type {Object} */
+        this.faye = new faye.Client(this.url);
+
+        // Set auth token
+        this.faye.addExtension({
+            outgoing: (message, cb) =&gt; {
+                if (message.channel !== &apos;/meta/subscribe&apos;) return cb(message);
+
+                message.ext = message.ext || {};
+                message.ext.token = this.token;
+                cb(message);
+            }
+        });
+        // Attach the handlers
+        this.attachEventHandlers();
+    }
+
+    /**
+     * Attach responsible event handlers
+     * @listens {jexia.auth.token} - New token
+     * @listens {jexia.dataset.subscription} - New dataset subsciption
+     */
+    attachEventHandlers() {
+        // Attach handler for new token
+        this.bus.on(&apos;jexia.auth.token&apos;, (data) =&gt; { this.onToken(data); });
+
+        // New subscription
+        this.bus.on(&apos;jexia.dataset.subscription&apos;, (data) =&gt; { this.onSubscription(data); });
+    }
+
+    /**
+     * Responsible for handling a new subscription
+     * @param {Object} data - Subscription response
+     */
+    onSubscription(data) {
+        let name = data.dataset,
+            event = data.event,
+            channel = &apos;/&apos; + data.app.id + &apos;/&apos; + name + &apos;/&apos; + data.app.key;
+
+        let subscription = this.faye.subscribe(channel, (data) =&gt; {
+            let curEvent = this.getEventWithoutNamespace(event);
+            if( data.type === curEvent || curEvent === &apos;*&apos; ) {
+                this.curSubscription = event;
+                this.bus.emit(event, data);
+            }
+        });
+
+        this.subscriptions.push({
+            data: {
+                app: data.app,
+                dataset: name,
+                event: event,
+                channel: channel
+            },
+            subscription: subscription
+        });
+    }
+
+    /**
+     * Responsible for handling a new token
+     * @param {Object} data - Subscription response
+     */
+    onToken(data) {
+        this.setToken(data.token);
+
+        this.curSubscription = &apos;&apos;;
+        this.subscriptions.forEach(item =&gt; {
+
+            // Unsubscribe first
+            this.faye.unsubscribe(item.data.channel);
+
+            // Subscribe again
+            item.subscription = this.faye.subscribe(item.data.channel, (data) =&gt; {
+                let curEvent = this.getEventWithoutNamespace(item.data.event);
+
+                if( data.type === curEvent || curEvent === &apos;*&apos; ) {
+                    if( this.curSubscription !== item.data.event) {
+                        this.curSubscription = item.data.event;
+                        this.bus.emit(item.data.event, data);
+                    }
+                }
+            });
+        });
+    }
+
+    /**
+     * get event name without namespace
+     * @param {string} event - Event with namespace attached
+     * @return {string} event - Event without namespace
+     */
+    getEventWithoutNamespace(event) {
+        let res = event.split(&apos;.&apos;);
+        return res[1];
+    }
+
+    /**
+     * Set the current token
+     * @param {string} token - token
+     */
+    setToken(token) {
+        this.token = token;
+    }
+}
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

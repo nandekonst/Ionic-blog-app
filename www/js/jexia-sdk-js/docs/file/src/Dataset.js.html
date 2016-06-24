@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/Dataset.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/jexia-inc/jexia-sdk-js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Auth.js~Auth.html">Auth</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Bus.js~Bus.html">Bus</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Dataset.js~Dataset.html">Dataset</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/JexiaClient.js~JexiaClient.html">JexiaClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/RealtimeClient.js~RealtimeClient.html">RealtimeClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-bus">bus</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/Dataset.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import request from &apos;request&apos;;
+import faye from &apos;faye&apos;;
+import Promise from &apos;bluebird&apos;;
+
+/**
+ * Dataset CRUD operations and realtime subscriptions
+ */
+export default class Dataset {
+
+    /**
+     * Create a dataset object with some initial values.
+     * @param {string} name - Name of the dataset
+     * @param {Object} client - {@link JexiaClient}
+     */
+    constructor(name, client) {
+        if( !name || !client ) throw new Error(&apos;Dataset needs some params&apos;);
+
+        /** @type {string} */
+        this.name = name;
+
+        /** @type {Object} */
+        this.auth = client.auth;
+
+        /** @type {Object} */
+        this.app = client.app;
+
+        /** @type {Object} */
+        this.rtc = client.rtc;
+
+        /** @type {Object} */
+        this.bus = client.bus;
+    }
+
+    /**
+     * List all records
+     * @return {Promise&lt;Array, Error&gt;}
+     * @example
+     * dataset.list().then(function(res) {
+     *    console.log(res);
+     * });
+     */
+    list() {
+        return this.request({
+            method: &apos;GET&apos;,
+            data: &apos;&apos;,
+            id: &apos;&apos;
+        });
+    }
+
+    /**
+     * Query a dataset with query parameters
+     * @param {Object} params - query params
+     * @return {Promise&lt;Array, Error&gt;}
+     * @example
+     * dataset.query({limit: 1}).then(function(res) {
+     *    console.log(res);
+     * });
+     */
+    query(params) {
+        return this.request({
+            method: &apos;GET&apos;,
+            data: &apos;&apos;,
+            id: &apos;&apos;,
+            qs: params
+        });
+    }
+
+    /**
+     * Get information about the dataset, such as total records
+     * @return {Promise&lt;Object, Error&gt;}
+     * @example
+     * dataset.info().then(function(res) {
+     *    console.log(res);
+     * });
+     */
+    info() {
+        return new Promise((resolve, reject) =&gt; {
+            this.request({
+                method: &apos;GET&apos;,
+                data: &apos;&apos;,
+                id: &apos;&apos;,
+                qs: {
+                    jexia_info: true
+                }
+            }).then( (body) =&gt; {
+                resolve(body.info);
+            }, (error) =&gt; {
+                reject(error);
+            });
+        });
+    }
+
+    /**
+     * Create a new record on the dataset
+     * @param {Object} data - Row data
+     * @return {Promise&lt;Object, Error&gt;}
+     * @example
+     * dataset.create({value: test}).then(function(res) {
+     *    console.log(res);
+     * });
+     */
+    create(data) {
+        return this.request({
+            method: &apos;POST&apos;,
+            data: data,
+            id: &apos;&apos;
+        });
+    }
+
+    /**
+     * Update a record on the dataset
+     * @param {string} id - record id
+     * @param {Object} data - Data to update
+     * @return {Promise&lt;Object, Error&gt;}
+     * @example
+     * dataset.update(&apos;s6svsrw452rwfs&apos;, {value: test}).then(function(res) {
+     *    console.log(res);
+     * });
+     */
+    update(id, data) {
+        return this.request({
+            method: &apos;PUT&apos;,
+            data: data,
+            id: id
+        });
+    }
+
+    /**
+     * Delete a record from the dataset
+     * @param {string} id - record id
+     * @return {Promise&lt;Object, Error&gt;}
+     * @example
+     * dataset.delete(&apos;s6svsrw452rwfs&apos;).then(function(res) {
+     *    console.log(res);
+     * });
+     */
+    delete(id) {
+        return this.request({
+            method: &apos;DELETE&apos;,
+            data: &apos;&apos;,
+            id: id
+        });
+    }
+
+    /**
+     * Get dataset url
+     * @private
+     * @return {string} url
+     */
+    getUrl() {
+        return this.auth.url + this.name + &apos;/&apos;;
+    }
+
+    /**
+     * Get dataset namespace
+     * @private
+     * @return {string} url
+     */
+    getEventNamespace(event) {
+        return this.name + &apos;.&apos; + event;
+    }
+
+    /**
+     * Http request
+     * @private
+     * @return {Promise&lt;Request, Error&gt;}
+     */
+    request(params) {
+        if( !params) throw new Error(&apos;Not enought params for request&apos;);
+
+        let method = params.method,
+            data = params.data,
+            id = params.id,
+            qs = {};
+
+        // Query params
+        if( typeof params.qs !== &apos;undefined&apos; ) {
+            qs = params.qs;
+        }
+
+        return new Promise((resolve, reject) =&gt; {
+            request({
+                url: this.getUrl() + id,
+                qs: qs,
+                rejectUnauthorized: false,
+                method: method,
+                json: data || true,
+                headers: {
+                    &apos;Authorization&apos;: &apos;Bearer &apos; + this.auth.getToken()
+                }
+            }, (error, response, body) =&gt; {
+                if( error ) {
+                    reject(error);
+                }
+
+                if(body &amp;&amp; body.message) {
+                    reject(body.message);
+                }
+
+                resolve(body);
+            });
+        });
+    }
+
+    /**
+     * Subscribe to realtime notfications
+     * The event name can be:
+     * 1. None =&gt; Any kind of activity
+     * 2. &apos;*&apos; =&gt; Any kind of activity
+     * 3. &apos;created&apos; =&gt; Only created rows
+     * 4. &apos;updated&apos; =&gt; Only updated rows
+     * 5. &apos;deleted&apos; =&gt; Only deleted rows
+     * @param {...args} args - Event name and callback function
+     * @emits {jexia.dataset.subscription} emit a new subscription event
+     * @returns {Object} Dataset
+     * @example
+     * Subscribe to all events:
+     * dataset.subscribe(function(data) {
+     *     console.log(data);
+     * });
+     *
+     * Subscribe to created events:
+     * dataset.subscribe(&apos;created&apos;, function(data) {
+     *     console.log(data);
+     * });
+     *
+     * Subscribe to updated events:
+     * dataset.subscribe(&apos;updated&apos;, function(data) {
+     *     console.log(data);
+     * });
+     *
+     * Subscribe to deleted events:
+     * dataset.subscribe(&apos;deleted&apos;, function(data) {
+     *     console.log(data);
+     * });
+     */
+    subscribe(...args) {
+        let event = &apos;&apos;,
+            cb = function callback() {};
+
+        // Listen all events
+        if(args.length === 1) {
+            event = &apos;*&apos;;
+            cb = args[0];
+        } else if(args.length === 2) {
+            event = args[0];
+            cb = args[1];
+        } else {
+            throw new Error(&apos;Not enough parameters for subscription&apos;);
+        }
+
+        // Attach the callback
+        this.bus.on(this.getEventNamespace(event), cb);
+
+        // Emit new subscription
+        this.bus.emit(&apos;jexia.dataset.subscription&apos;, {
+            app: this.app,
+            dataset: this.name,
+            event: this.getEventNamespace(event)
+        });
+
+        // Chainning
+        return this;
+    }
+    /**
+     * Unsubscribe from realtime notfications
+     * @param {...args} args - Event name and callback function
+     * @example
+     * dataset.unsubscribe(function(data) {
+     *     console.log(data);
+     * });
+     */
+    unsubscribe(...args) {
+        let event = &apos;&apos;,
+            cb = function callback() {};
+
+        if(args.length === 1) {
+            event = &apos;*&apos;;
+            cb = args[0];
+        } else if(args.length === 2) {
+            event = args[0];
+            cb = args[1];
+        } else {
+            throw new Error(&apos;Not enough parameters to unsubscribe&apos;);
+        }
+
+        this.bus.removeListener(this.getEventNamespace(event), cb);
+    }
+}
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

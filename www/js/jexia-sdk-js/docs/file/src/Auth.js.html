@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/Auth.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/jexia-inc/jexia-sdk-js.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Auth.js~Auth.html">Auth</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Bus.js~Bus.html">Bus</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/Dataset.js~Dataset.html">Dataset</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/JexiaClient.js~JexiaClient.html">JexiaClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/RealtimeClient.js~RealtimeClient.html">RealtimeClient</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-bus">bus</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/Auth.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import request from &apos;request&apos;;
+import Promise from &apos;bluebird&apos;;
+
+/**
+ * Managing the session between jexia-sdk-js and Jexia.
+ */
+export default class Auth {
+
+    /**
+     * Create a new Auth object with some initial values.
+     * @param {Object} options - Initial options object
+     * @param {string} options.url - Authentication app url
+     * @param {string} options.key - Authentication app key
+     * @param {string} options.secret - Authentication app secret
+     * @param {Object} options.client - {@link JexiaClient}
+     */
+    constructor(options) {
+        if( !options ) {
+            throw new Error(&apos;Auth needs some params&apos;);
+        }
+
+        /** @type {string} */
+        this.url = options.url;
+
+        /** @type {string} */
+        this.key = options.key;
+
+        /** @type {string} */
+        this.secret = options.secret;
+
+        /** @type {Object} */
+        this.client = options.client;
+
+        /** @type {Object} */
+        this.bus = options.client.bus;
+
+        /** @type {string} */
+        this.token = &apos;&apos;;
+
+        /** @type {string} */
+        this.refreshToken = &apos;&apos;;
+
+        // 1 hour and 50 minutes; JEXIA token expires in 2 hours
+        this.autoRefresh(1000 * 60 * 110);
+    }
+
+    /**
+     * Initialize a new session between jexia-sdk-js and Jexia
+     * @return {Promise&lt;Auth, Error&gt;}
+     */
+    init() {
+        return new Promise((resolve, reject) =&gt; {
+            request({
+                url: this.url,
+                qs: {},
+                rejectUnauthorized: false,
+                method: &apos;POST&apos;,
+                json: {
+                    key: this.key,
+                    secret: this.secret
+                }
+            }, (error, response, body) =&gt; {
+                if(error) {
+                    reject(error);
+                } else {
+                    if(body &amp;&amp; body.message) {
+                        reject(body.message);
+                    }
+                    this.setToken(body.token);
+                    this.setRefreshToken(body.refresh_token);
+
+                    resolve(this);
+                }
+            });
+        });
+    }
+
+    /**
+     * Get current token
+     * @return {string} Current token
+     */
+    getToken() {
+        return this.token;
+    }
+
+    /**
+     * Get current refresh token
+     * @return {string} Current refresh token
+     */
+    getRefreshToken() {
+        return this.refreshToken;
+    }
+
+    /**
+     * Set current token
+     * @param {string} token - the new token
+     */
+    setToken(token) {
+        this.token = token;
+    }
+
+    /**
+     * Set current refresh token
+     * @param {string} refreshToken - the new token
+     */
+    setRefreshToken(refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    /**
+     * Refresh the session after a given time delay
+     * @param {number} delay - delay in milliseconds
+     * @emits {jexia.auth.token} emit an authentication event when we successfully refreshed the session with Jexia
+     */
+    autoRefresh(delay) {
+        setInterval( () =&gt; {
+            request({
+                url: this.url,
+                qs: {},
+                rejectUnauthorized: false,
+                method: &apos;PATCH&apos;,
+                json: {
+                    refresh_token: this.refreshToken
+                },
+                headers: {
+                    &apos;Authorization&apos;: &apos;Bearer &apos; + this.token
+                }
+            }, (error, response, body) =&gt; {
+                if(error) {
+                    throw new Error(error);
+                }
+                // Set new tokens
+                this.setToken(body.token);
+                this.setRefreshToken(body.refresh_token);
+
+                // Inform the bus that we have a new token
+                this.bus.emit(&apos;jexia.auth.token&apos;, {
+                    token: this.getToken(),
+                    refreshToken: this.getRefreshToken()
+                });
+            });
+        }, delay);
+    }
+}
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
